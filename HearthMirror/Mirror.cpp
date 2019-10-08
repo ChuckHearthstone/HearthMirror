@@ -117,6 +117,49 @@ namespace hearthmirror {
     }
     #define GETOBJECT(...) getObject(__VA_ARGS__, m_mirrorData->monoImage)
 
+    MonoValue getService(const std::string& name, MonoImage *monoImage) {
+        MonoValue dynServices = getObject({"HearthstoneServices", "s_dynamicServices"}, monoImage);
+        MonoValue staticServices = getObject({"HearthstoneServices", "s_services"}, monoImage);
+
+        MonoValue ret = nullMonoValue;
+        
+        MonoValue hsServices;
+        if (!IsMonoValueEmpty(dynServices)) {
+            hsServices = dynServices;
+        } else {
+            hsServices = staticServices;
+        }
+
+        MonoValue serviceItems = getObject(hsServices, {"m_services", "_items"});
+        
+        for (unsigned int i = 0; i< serviceItems.arrsize; i++) {
+            MonoValue mv = serviceItems[i];
+            MonoObject* mo = serviceItems[i].value.obj.o;
+            
+            if (IsMonoValueEmpty(mv)) {
+                continue;
+            }
+
+            std::u16string n = (*mo)["<ServiceTypeName>k__BackingField"].str;
+            std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> convert;
+            std::string n2 = convert.to_bytes(n);
+
+            if (n2 == name) {
+                ret = getObject(mv, {"<Service>k__BackingField"});
+                break;
+            }
+        }
+        
+        DeleteMonoValue(dynServices);
+        DeleteMonoValue(staticServices);
+        DeleteMonoValue(serviceItems);
+        
+        return ret;
+    }
+
+    #define GETSERVICE(...) getService(__VA_ARGS__, m_mirrorData->monoImage)
+
+
     /** Helper to get an int */
     int getInt(const HMObjectPath& path, MonoImage* monoImage) {
         MonoValue mv = getObject(path, monoImage);
@@ -353,7 +396,7 @@ namespace hearthmirror {
     InternalGameServerInfo Mirror::getGameServerInfo() {
         if (!m_mirrorData->monoImage) throw std::domain_error("Mono image can't be found");
 
-        MonoValue mv = GETOBJECT({"Network","s_instance","m_lastGameServerInfo"});
+        MonoValue mv = getObject(GETSERVICE("Network"), {"m_state", "<LastGameServerInfo>k__BackingField"});
         if (IsMonoValueEmpty(mv)) throw std::domain_error("Game server info can't be found");
         MonoObject* m_serverInfo = mv.value.obj.o;
 
@@ -376,19 +419,19 @@ namespace hearthmirror {
     int Mirror::getGameType() {
         if (!m_mirrorData->monoImage) throw std::domain_error("Mono image can't be found");
 
-        return GETINT({"GameMgr","s_instance","m_gameType"});
+        return getInt(GETSERVICE("GameMgr"), {"m_gameType"});
     }
 
     int Mirror::getFormat() {
         if (!m_mirrorData->monoImage) throw std::domain_error("Mono image can't be found");
 
-        return GETINT({"GameMgr","s_instance","m_formatType"});
+        return getInt(GETSERVICE("GameMgr"), {"m_formatType"});
     }
 
     bool Mirror::isSpectating() {
         if (!m_mirrorData->monoImage) throw std::domain_error("Mono image can't be found");
 
-        return GETBOOL({"GameMgr","s_instance","m_spectator"});
+        return getBool(GETSERVICE("GameMgr"), {"m_spectator"});
     }
 
     InternalMatchInfo Mirror::getMatchInfo() {
@@ -397,7 +440,7 @@ namespace hearthmirror {
         InternalMatchInfo matchInfo;
 
         MonoValue gameState = GETOBJECT({"GameState","s_instance"});
-        MonoValue netCacheValues = GETOBJECT({"NetCache","s_instance","m_netCache","valueSlots"});
+        MonoValue netCacheValues = getObject(GETSERVICE("NetCache"), {"m_netCache","valueSlots"});
         if (!IsMonoValueEmpty(gameState)) {
             MonoValue playerIds = getObject(gameState, {"m_playerMap","keySlots"});
             MonoValue players = getObject(gameState, {"m_playerMap","valueSlots"});
@@ -540,7 +583,7 @@ namespace hearthmirror {
             DeleteMonoValue(gameState);
         }
 
-        MonoValue _gameMgr = GETOBJECT({"GameMgr","s_instance"});
+        MonoValue _gameMgr = GETSERVICE("GameMgr");
         if (!IsMonoValueEmpty(_gameMgr)) {
             MonoObject *gameMgr = _gameMgr.value.obj.o;
             if (gameMgr != NULL) {
@@ -586,7 +629,7 @@ namespace hearthmirror {
     MonoValue getCurrentBrawlMission(MonoImage* monoImage) {
         if (!monoImage) throw std::domain_error("Mono image can't be found");
 
-        MonoValue missions = getObject({"TavernBrawlManager","s_instance","m_missions"}, monoImage);
+        MonoValue missions = getObject(getService("TavernBrawlManager", monoImage), {"m_missions"});
         if (IsMonoValueEmpty(missions) || !IsMonoValueArray(missions)) { return NULL; }
         MonoValue record(0);
         for (unsigned int i=0; i< missions.arrsize; i++) {
@@ -628,7 +671,7 @@ namespace hearthmirror {
         getAsInt(result.maxWins, _tavernBrawlSpec, "_MaxWins");
         getAsInt(result.maxLosses, _tavernBrawlSpec, "_MaxLosses");
 
-        MonoValue records = GETOBJECT({"TavernBrawlManager","s_instance", "m_playerRecords"});
+        MonoValue records = getObject(GETSERVICE("TavernBrawlManager"), {"m_playerRecords"});
         if (IsMonoValueEmpty(records) || !IsMonoValueArray(records))
             throw std::domain_error("Brawl manager can't be found");
 
@@ -880,7 +923,7 @@ namespace hearthmirror {
 
         ArenaInfo result;
 
-        MonoValue _draftManager = GETOBJECT({"DraftManager","s_instance"});
+        MonoValue _draftManager = GETSERVICE("DraftManager");
         if (IsMonoValueEmpty(_draftManager)) throw std::domain_error("Draft manager can't be found");
         MonoObject* draftManager = _draftManager.value.obj.o;
 
@@ -1012,7 +1055,7 @@ namespace hearthmirror {
     Collection Mirror::getCollection() {
         if (!m_mirrorData->monoImage) throw std::domain_error("Mono image can't be found");
 
-        MonoValue valueSlots = GETOBJECT({"NetCache","s_instance","m_netCache","valueSlots"});
+        MonoValue valueSlots = getObject(GETSERVICE("NetCache"), {"m_netCache","valueSlots"});
         if (IsMonoValueEmpty(valueSlots) || !IsMonoValueArray(valueSlots)) {
             throw std::domain_error("Net cache can't be found");
         }
@@ -1145,7 +1188,7 @@ namespace hearthmirror {
     std::vector<HeroLevel> Mirror::getHeroLevels() {
         if (!m_mirrorData->monoImage) throw std::domain_error("Mono image can't be found");
 
-        MonoValue valueSlots = GETOBJECT({"NetCache","s_instance","m_netCache","valueSlots"});
+        MonoValue valueSlots = getObject(GETSERVICE("NetCache"), {"m_netCache","valueSlots"});
         if (IsMonoValueEmpty(valueSlots) || !IsMonoValueArray(valueSlots)) {
             throw std::domain_error("Net cache can't be found");
         }
@@ -1338,7 +1381,7 @@ namespace hearthmirror {
     SceneMode Mirror::GetCurrentSceneMode() {
         if (!m_mirrorData->monoImage) throw std::domain_error("Mono image can't be found");
 
-        return (SceneMode)GETINT({"SceneMgr","s_instance","m_mode"});
+        return (SceneMode)getInt(GETSERVICE("SceneMgr"), {"m_mode"});
     }
 
     bool Mirror::isPlayerHandZoneUpdatingLayout() {
