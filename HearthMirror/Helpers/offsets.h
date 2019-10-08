@@ -132,17 +132,17 @@
 #define kMonoInternalHashTableSize 0xc
 #define kMonoInternalHashTableTable 0x14
 
-#define kMonoClassNextClassCache 0xa8
-#define kMonoClassName 0x30
-#define kMonoClassNameSpace 0x34
-#define kMonoClassNestedIn 0x28
-#define kMonoClassRuntimeInfo 0xa4
+#define kMonoClassParent 0x24
+#define kMonoClassName 0x34
+#define kMonoClassNameSpace 0x38
+#define kMonoClassNestedIn 0x2c
+#define kMonoClassRuntimeInfo 0xa8
 #define kMonoClassRuntimeInfoDomainVtables 0x4
 #define kMonoClassBitfields  0x14
-#define kMonoClassSizes 0x58
-#define kMonoClassParent 0x24
-#define kMonoClassByvalArg 0x88
-#define kMonoClassFields 0x74
+#define kMonoClassSizes 0x5c
+#define kMonoClassByvalArg 0x8c
+#define kMonoClassFields 0x78
+#define kMonoClassNextClassCache 0xac
 
 #define kMonoClassFieldCount 0x64
 #define kMonoClassFieldSizeof 0x10
@@ -167,17 +167,17 @@
 #define kMonoInternalHashTableSize64 0xc
 #define kMonoInternalHashTableTable64 0x14
 
-#define kMonoClassNextClassCache64 0xa8
-#define kMonoClassName64 0x30
-#define kMonoClassNameSpace64 0x34
-#define kMonoClassNestedIn64 0x28
-#define kMonoClassRuntimeInfo64 0xa4
+#define kMonoClassParent64 0x24
+#define kMonoClassName64 0x34
+#define kMonoClassNameSpace64 0x38
+#define kMonoClassNestedIn64 0x2c
+#define kMonoClassRuntimeInfo64 0xa8
 #define kMonoClassRuntimeInfoDomainVtables64 0x4
 #define kMonoClassBitfields64  0x14
-#define kMonoClassSizes64 0x58
-#define kMonoClassParent64 0x24
-#define kMonoClassByvalArg64 0x88
-#define kMonoClassFields64 0x74
+#define kMonoClassSizes64 0x5c
+#define kMonoClassByvalArg64 0x8c
+#define kMonoClassFields64 0x78
+#define kMonoClassNextClassCache64 0xac
 
 #define kMonoClassFieldCount64 0x64
 #define kMonoClassFieldSizeof64 0x10

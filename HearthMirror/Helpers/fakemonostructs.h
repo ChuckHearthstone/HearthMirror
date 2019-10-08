@@ -495,6 +495,8 @@ struct FakeMonoClass {
     ptr32_t  parent;
     ptr32_t  nested_in;
     
+    ptr32_t cattrs;
+    
     ptr32_t image;
     ptr32_t name;
     ptr32_t name_space;
@@ -588,6 +590,8 @@ struct FakeMonoClass64 {
     ptr64_t  parent;
     ptr64_t  nested_in;
     
+    ptr64_t  cattrs;
+
     ptr64_t image;
     const ptr64_t name; // char*
     const ptr64_t name_space; // char*
